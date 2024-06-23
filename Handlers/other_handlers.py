@@ -2,18 +2,19 @@ from aiogram import Router, Bot, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, State,StatesGroup
+from aiogram.fsm.state import default_state, State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from asyncio import sleep
 
-from Keyboards.keyboards import crate_keyboard
+from Database import requests
+from Keyboards.keyboards import create_reply_keyboard
 
 from Resources.strings_ru import MENU_BUTTONS
 
 
 router: Router = Router()
-keyboard = crate_keyboard(2, **MENU_BUTTONS)
+keyboard = create_reply_keyboard(2, 'Выберите пункт меню...', **MENU_BUTTONS)
 
 
 class FSMFillDice(StatesGroup):
@@ -22,6 +23,7 @@ class FSMFillDice(StatesGroup):
 
 @router.message(CommandStart())
 async def start(message: Message):
+    await requests.set_user(message.from_user.id)
     await message.delete()
     await message.answer(f'Привет {message.from_user.full_name}!', reply_markup=keyboard)
 
@@ -57,4 +59,5 @@ async def user_dice(message: Message, state: FSMContext):
 
 @router.message()
 async def user_dice(message: Message):
+    await message.answer('У меня нет таких комманд\nМожет список покупок?')
     print(message)
