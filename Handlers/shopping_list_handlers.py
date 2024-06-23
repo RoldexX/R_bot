@@ -128,5 +128,6 @@ async def delete_shopping_list_by_id(callback: CallbackQuery):
 
 @router.callback_query(F.data == 'delet_massage')
 async def delet_message(callback: CallbackQuery):
+    await callback.answer('Сообщение удалено')
     await callback.message.delete()
 
