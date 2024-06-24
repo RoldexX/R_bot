@@ -118,6 +118,13 @@ async def add_items_to_shopping_list(callback: CallbackQuery, state: FSMContext)
                                                                      **MENU_BUTTONS_NEW_LIST))
 
 
+@router.callback_query(F.data.startswith('share_shopping_list_'))
+async def share_shopping_list(callback: CallbackQuery):
+    shopping_list_id = callback.data.split('_')[-1]
+    await callback.answer('Делимся списком')
+    await callback.message.edit_text('Перешлите следующее сообщение тому с кем хотите поделиться')
+
+
 @router.callback_query(F.data.startswith('delete_'))
 async def delete_shopping_list_by_id(callback: CallbackQuery):
     shopping_list_id = callback.data.split('_')[-1]
