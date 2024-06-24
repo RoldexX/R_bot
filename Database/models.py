@@ -34,8 +34,6 @@ class Product(Base):
     check: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
-
-
 class UserShoppingList(Base):
     __tablename__ = 'users_shopping_lists'
 

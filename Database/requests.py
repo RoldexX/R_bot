@@ -1,7 +1,7 @@
 from Database.models import async_session
 from Database.models import User, UserShoppingList, ShoppingList, Product
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, and_
 
 
 async def set_user(tg_id):
@@ -43,7 +43,7 @@ async def get_shopping_lists(tg_id):
         shopping_lists_ids = await session.scalars(select(UserShoppingList).where(UserShoppingList.id_user == user.id))
         user_shopping_lists: dict[str, str] = {}
         for shopping_list_id in shopping_lists_ids:
-            shopping_list = await session.scalar(select(ShoppingList).where(ShoppingList.id == shopping_list_id.id))
+            shopping_list = await session.scalar(select(ShoppingList).where(ShoppingList.id == shopping_list_id.id_shopping_list))
             user_shopping_lists[f'shopping_list_{shopping_list.id}'] = shopping_list.title
         return user_shopping_lists
 
@@ -73,6 +73,21 @@ async def edit_product_check(product_id):
         print(product_check)
         await session.execute(update(Product).values(check=product_check).where(Product.id == product_id))
         await session.commit()
+
+
+async def connect_shopping_list(tg_id, shopping_list_id: int):
+    async with async_session() as session:
+        user_id = (await session.scalar(select(User).where(User.tg_id == tg_id))).id
+        user_shopping_list = await session.scalar(select(UserShoppingList).filter(and_(
+            UserShoppingList.id_user == user_id,
+            UserShoppingList.id_shopping_list == shopping_list_id))
+        )
+        if not user_shopping_list:
+            session.add(UserShoppingList(id_user=user_id, id_shopping_list=shopping_list_id))
+            print('подключён')
+            await session.commit()
+        else:
+            print('уже есть такой')
 
 
 async def delete_shopping_list(shopping_list_id):
