@@ -144,6 +144,19 @@ async def get_shared_shopping_list(message: Message):
 @router.callback_query(F.data.startswith('delete_'))
 async def delete_shopping_list_by_id(callback: CallbackQuery):
     shopping_list_id = callback.data.split('_')[-1]
+    await callback.answer('Подтвердите удаление')
+    shopping_list_name = await get_shopping_list_title(shopping_list_id)
+    last_buttons = {
+        f'confirmed_delete_{shopping_list_id}': '❌ Подтвердить удаление',
+        f'shopping_list_{shopping_list_id}': '⬅️ назад'
+    }
+    await callback.message.edit_text(f'Вы дейсвительно хотите удалить список {shopping_list_name}',
+                                     reply_markup=create_inline_keyboard(1, last_buttons))
+
+
+@router.callback_query(F.data.startswith('confirmed_delete_'))
+async def delete_shopping_list_by_id(callback: CallbackQuery):
+    shopping_list_id = callback.data.split('_')[-1]
     await delete_shopping_list(shopping_list_id)
     await callback.answer('Список удалён')
     await callback.message.delete()
