@@ -7,7 +7,6 @@ from sqlalchemy import select, update, delete, and_
 async def set_user(tg_id):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
-        print(user)
         if not user:
             session.add(User(tg_id=tg_id))
             await session.commit()
@@ -70,7 +69,6 @@ async def add_product(shopping_list_id, product):
 async def edit_product_check(product_id):
     async with async_session() as session:
         product_check = not (await session.scalar(select(Product).where(Product.id == product_id))).check
-        print(product_check)
         await session.execute(update(Product).values(check=product_check).where(Product.id == product_id))
         await session.commit()
 
@@ -84,10 +82,7 @@ async def connect_shopping_list(tg_id, shopping_list_id: int):
         )
         if not user_shopping_list:
             session.add(UserShoppingList(id_user=user_id, id_shopping_list=shopping_list_id))
-            print('подключён')
             await session.commit()
-        else:
-            print('уже есть такой')
 
 
 async def delete_shopping_list(shopping_list_id):
