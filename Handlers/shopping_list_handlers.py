@@ -48,7 +48,8 @@ async def shopping_list(message: Message, state: FSMContext):
                                                   title=message.text)
     await state.update_data(shopping_list_id=shopping_list_id)
     await state.set_state(ShoppingList.items)
-    await message.answer(f'Создан список {message.text}',
+    await message.answer(f'Создан список {message.text}\n'
+                         f'Теперь вводите названия продуктов по одному, либо отделяя их переносом на новую строку',
                          reply_markup=create_reply_keyboard(width=2,
                                                             placeholder='Название продукта',
                                                             **MENU_BUTTONS_NEW_LIST))
@@ -115,7 +116,9 @@ async def add_items_to_shopping_list(callback: CallbackQuery, state: FSMContext)
     await state.update_data(shopping_list_id=shopping_list_id)
     await state.set_state(ShoppingList.items)
     await callback.message.delete()
-    await callback.message.answer(f'Дополняем список {await get_shopping_list_title(shopping_list_id)}',
+    await callback.message.answer(f'Дополняем список {await get_shopping_list_title(shopping_list_id)}\n'
+                                  f'Теперь вводите названия продуктов по одному, '
+                                  f'либо отделяя их переносом на новую строку',
                                   reply_markup=create_reply_keyboard(width=2,
                                                                      placeholder='Название продукта',
                                                                      **MENU_BUTTONS_NEW_LIST))
@@ -127,7 +130,8 @@ async def share_shopping_list(callback: CallbackQuery):
     await callback.answer('Делимся списком')
     await callback.message.edit_text('Перешлите следующее сообщение тому с кем хотите поделиться')
     await callback.message.answer(
-        f'Перейдите в бота @RoldexProBot и отправьте ему это сообщение для подключения списка покупок\nПодключить список {shopping_list_id}'
+        f'Перейдите в бота @RoldexProBot и отправьте ему это сообщение для подключения списка покупок\n'
+        f'Подключить список {shopping_list_id}'
     )
 
 
@@ -138,7 +142,9 @@ async def get_shared_shopping_list(message: Message):
     if message.forward_origin.sender_user.username == 'RoldexProBot':
         shopping_list_id = int(message.text.split(' ')[-1])
         await connect_shopping_list(message.from_user.id, shopping_list_id)
-        await message.answer(f'Подключаем список {shopping_list_id}')
+
+        shopping_list_name = await get_shopping_list_title(shopping_list_id)
+        await message.answer(f'Вам подлючён список {shopping_list_name}')
 
 
 @router.callback_query(F.data.startswith('delete_'))
