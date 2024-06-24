@@ -66,7 +66,9 @@ async def add_items_to_shopping_list(message: Message, state: FSMContext):
 
     elif message.text != MENU_BUTTONS_NEW_LIST['exit']:
         shopping_list_id = (await state.get_data())['shopping_list_id']
-        await add_product(shopping_list_id, message.text)
+        items = message.text.split('\n')
+        for item in items:
+            await add_product(shopping_list_id, item)
     else:
         await state.clear()
         await message.answer('Хорошо, сохранил ваши продукты', reply_markup=keyboard)
