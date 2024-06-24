@@ -1,4 +1,4 @@
-from aiogram import Router, F, Bot
+from aiogram import Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -123,6 +123,18 @@ async def share_shopping_list(callback: CallbackQuery):
     shopping_list_id = callback.data.split('_')[-1]
     await callback.answer('Делимся списком')
     await callback.message.edit_text('Перешлите следующее сообщение тому с кем хотите поделиться')
+    await callback.message.answer(
+        f'Перейдите в бота @RoldexProBot и отправьте ему это сообщение для подключения списка покупок\nПодключить список {shopping_list_id}'
+    )
+
+
+@router.message(F.text.startswith(
+    'Перейдите в бота @RoldexProBot и отправьте ему это сообщение для подключения списка покупок')
+)
+async def get_shared_shopping_list(message: Message):
+    if message.forward_origin.sender_user.username == 'RoldexProBot':
+        shopping_list_id = message.text.split(' ')[-1]
+        await message.answer(f'Подключаем список {shopping_list_id}')
 
 
 @router.callback_query(F.data.startswith('delete_'))
@@ -137,4 +149,3 @@ async def delete_shopping_list_by_id(callback: CallbackQuery):
 async def delet_message(callback: CallbackQuery):
     await callback.answer('Сообщение удалено')
     await callback.message.delete()
-
