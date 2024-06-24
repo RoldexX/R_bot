@@ -11,7 +11,8 @@ from Database.requests import (get_shopping_lists,
                                get_shopping_list_items,
                                get_shopping_list_ig_by_product_id,
                                edit_product_check,
-                               delete_shopping_list)
+                               delete_shopping_list,
+                               connect_shopping_list)
 from Keyboards.keyboards import (create_inline_keyboard,
                                  create_reply_keyboard,
                                  create_inline_keyboard_shopping_list_settings)
@@ -133,7 +134,8 @@ async def share_shopping_list(callback: CallbackQuery):
 )
 async def get_shared_shopping_list(message: Message):
     if message.forward_origin.sender_user.username == 'RoldexProBot':
-        shopping_list_id = message.text.split(' ')[-1]
+        shopping_list_id = int(message.text.split(' ')[-1])
+        await connect_shopping_list(message.from_user.id, shopping_list_id)
         await message.answer(f'Подключаем список {shopping_list_id}')
 
 
