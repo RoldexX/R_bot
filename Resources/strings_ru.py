@@ -4,6 +4,10 @@ MENU_BUTTONS: dict[str, str] = {
     'shopping_list': 'Список покупок'
 }
 
+MENU_BUTTON_DICE = {
+    'dice': '🎲'
+}
+
 MENU_BUTTONS_NEW_LIST: dict[str, str] = {
     'get_list': 'Покажи список',
     'exit': 'Пока всё'

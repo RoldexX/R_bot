@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, Bot, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart, StateFilter
@@ -10,11 +12,12 @@ from asyncio import sleep
 from Database import requests
 from Keyboards.keyboards import create_reply_keyboard
 
-from Resources.strings_ru import MENU_BUTTONS
+from Resources.strings_ru import MENU_BUTTONS, MENU_BUTTON_DICE
 
 
 router: Router = Router()
 keyboard = create_reply_keyboard(2, 'Выберите пункт меню...', **MENU_BUTTONS)
+keyboard_dice = create_reply_keyboard(1, 'Кидайте кубик', True, **MENU_BUTTON_DICE)
 
 
 class FSMFillDice(StatesGroup):
@@ -38,7 +41,7 @@ async def keyboard_say_hi(message: Message):
 @router.message(F.text == MENU_BUTTONS['take_cube'])
 async def keyboard_take_cube(message: Message, bot: Bot, state: FSMContext):
     """ Бот бросает кубик, сохраняет значение и ожидает броска пользователя """
-    bot_dice = (await bot.send_dice(chat_id=message.from_user.id)).dice
+    bot_dice = (await bot.send_dice(chat_id=message.from_user.id, reply_markup=keyboard_dice)).dice
     print(bot_dice)
     await state.update_data(bot_dice_value=bot_dice.value)
     await state.set_state(FSMFillDice.bot_threw_dice)
@@ -51,14 +54,14 @@ async def user_dice(message: Message, state: FSMContext):
     print(user_dice_value)
     bot_dice_value = (await state.get_data())["bot_dice_value"]
     await state.clear()
-    await sleep(3)
+    await asyncio.sleep(3)
     if user_dice_value > bot_dice_value:
-        await message.answer('Вы выйграли)')
+        await message.answer('Вы выйграли)', reply_markup=keyboard)
         await message.answer('🎉')
     elif user_dice_value < bot_dice_value:
-        await message.answer('Вы проиграли(')
+        await message.answer('Вы проиграли(', reply_markup=keyboard)
     else:
-        await message.answer('Ничья!')
+        await message.answer('Ничья!', reply_markup=keyboard)
 
 
 @router.message()

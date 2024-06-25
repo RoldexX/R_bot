@@ -3,7 +3,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardBut
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 
-def create_reply_keyboard(width: int, placeholder: str = '', *args: list[str],
+def create_reply_keyboard(width: int, placeholder: str = '', one_time=False, *args: list[str],
                           **kwargs: dict[str, str]) -> ReplyKeyboardMarkup:
     """ Инициализация пользовательской клавиатуры """
 
@@ -20,7 +20,7 @@ def create_reply_keyboard(width: int, placeholder: str = '', *args: list[str],
             buttons.append(KeyboardButton(text=value))
 
     menu.row(*buttons, width=width)
-    return menu.as_markup(resize_keyboard=True, input_field_placeholder=f'{placeholder}')
+    return menu.as_markup(resize_keyboard=True, input_field_placeholder=f'{placeholder}', one_time_keyboard=one_time)
 
 
 def create_inline_keyboard(width: int, last_button: dict[str, str] = None, *args: list[str],
