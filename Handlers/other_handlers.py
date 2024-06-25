@@ -42,7 +42,6 @@ async def keyboard_say_hi(message: Message):
 async def keyboard_take_cube(message: Message, bot: Bot, state: FSMContext):
     """ Бот бросает кубик, сохраняет значение и ожидает броска пользователя """
     bot_dice = (await bot.send_dice(chat_id=message.from_user.id, reply_markup=keyboard_dice)).dice
-    print(bot_dice)
     await state.update_data(bot_dice_value=bot_dice.value)
     await state.set_state(FSMFillDice.bot_threw_dice)
 
@@ -51,7 +50,6 @@ async def keyboard_take_cube(message: Message, bot: Bot, state: FSMContext):
 async def user_dice(message: Message, state: FSMContext):
     """ Получаем значение кубика пользователя и выводим результат """
     user_dice_value = message.dice.value
-    print(user_dice_value)
     bot_dice_value = (await state.get_data())["bot_dice_value"]
     await state.clear()
     await asyncio.sleep(3)
@@ -68,4 +66,3 @@ async def user_dice(message: Message, state: FSMContext):
 async def user_dice(message: Message):
     """ Обрабатываем отсутствующие комманды """
     await message.answer('У меня нет таких комманд\nМожет список покупок?')
-    print(message)
