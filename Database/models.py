@@ -2,6 +2,10 @@ from sqlalchemy import Integer, BigInteger, String, Boolean, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
+from Config_data.config import Config, load_config
+
+config: Config = load_config()
+
 engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3')
 
 async_session = async_sessionmaker(engine)
