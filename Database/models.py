@@ -32,6 +32,7 @@ class Product(Base):
     id_shoppinglist: Mapped[int] = mapped_column(ForeignKey('shopping_lists.id', ondelete='CASCADE'))
     title: Mapped[str] = mapped_column(String(50))
     check: Mapped[bool] = mapped_column(Boolean, default=False)
+    selected_for_delete: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class UserShoppingList(Base):

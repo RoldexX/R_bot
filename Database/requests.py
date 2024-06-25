@@ -47,6 +47,20 @@ async def get_shopping_list_items_with_check(id_shopping_list):
         return shopping_list_items
 
 
+async def get_shopping_list_items_with_delete_state(id_shopping_list):
+    async with async_session() as session:
+        shopping_list_items_obj = await session.scalars(
+            select(Product).where(Product.id_shoppinglist == id_shopping_list)
+        )
+        shopping_list_items: dict[str, str] = dict()
+        for item in shopping_list_items_obj:
+            if item.selected_for_delete:
+                shopping_list_items[f'select_item_for_del_product_product_{item.id}'] = f'❌ {item.title}'
+            else:
+                shopping_list_items[f'select_item_for_del_product_product_{item.id}'] = item.title
+        return shopping_list_items
+
+
 async def get_shopping_lists(tg_id):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
@@ -81,6 +95,23 @@ async def edit_product_check(product_id):
     async with async_session() as session:
         product_check = not (await session.scalar(select(Product).where(Product.id == product_id))).check
         await session.execute(update(Product).values(check=product_check).where(Product.id == product_id))
+        await session.commit()
+
+
+async def edit_product_delete_status(product_id):
+    async with async_session() as session:
+        product_delete_status = not (
+            await session.scalar(select(Product).where(Product.id == product_id))
+        ).selected_for_delete
+        await session.execute(
+            update(Product).values(selected_for_delete=product_delete_status).where(Product.id == product_id)
+        )
+        await session.commit()
+
+
+async def delete_selected_product(shopping_list_id):
+    async with async_session() as session:
+        await session.execute(delete(Product).where(and_(Product.id_shoppinglist == shopping_list_id, Product.selected_for_delete == True)))
         await session.commit()
 
 
