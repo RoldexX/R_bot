@@ -12,17 +12,17 @@ async def set_user(tg_id):
             await session.commit()
 
 
-async def get_shopping_list_ig_by_product_id(product_id):
+async def get_shopping_list_ig_by_product_id(product_id: int):
     async with async_session() as session:
         return (await session.scalar(select(Product).where(Product.id == product_id))).id_shoppinglist
 
 
-async def get_shopping_list_title(id_shopping_list):
+async def get_shopping_list_title(id_shopping_list: int):
     async with async_session() as session:
         return await session.scalar(select(ShoppingList.title).where(ShoppingList.id == id_shopping_list))
 
 
-async def get_shopping_list_items(id_shopping_list, key_product_start_with: str = ''):
+async def get_shopping_list_items(id_shopping_list: int, key_product_start_with: str = ''):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
             select(Product).where(Product.id_shoppinglist == id_shopping_list)
@@ -33,7 +33,7 @@ async def get_shopping_list_items(id_shopping_list, key_product_start_with: str 
         return shopping_list_items
 
 
-async def get_shopping_list_items_with_check(id_shopping_list):
+async def get_shopping_list_items_with_check(id_shopping_list: int):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
             select(Product).where(Product.id_shoppinglist == id_shopping_list)
@@ -47,7 +47,7 @@ async def get_shopping_list_items_with_check(id_shopping_list):
         return shopping_list_items
 
 
-async def get_shopping_list_items_with_delete_state(id_shopping_list):
+async def get_shopping_list_items_with_delete_state(id_shopping_list: int):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
             select(Product).where(Product.id_shoppinglist == id_shopping_list)
@@ -85,20 +85,20 @@ async def create_shopping_list(tg_id, title):
     return new_shopping_list
 
 
-async def add_product(shopping_list_id, product):
+async def add_product(shopping_list_id: int, product):
     async with async_session() as session:
         session.add(Product(id_shoppinglist=shopping_list_id, title=product))
         await session.commit()
 
 
-async def edit_product_check(product_id):
+async def edit_product_check(product_id: int):
     async with async_session() as session:
         product_check = not (await session.scalar(select(Product).where(Product.id == product_id))).check
         await session.execute(update(Product).values(check=product_check).where(Product.id == product_id))
         await session.commit()
 
 
-async def edit_product_delete_status(product_id):
+async def edit_product_delete_status(product_id: int):
     async with async_session() as session:
         product_delete_status = not (
             await session.scalar(select(Product).where(Product.id == product_id))
@@ -109,7 +109,7 @@ async def edit_product_delete_status(product_id):
         await session.commit()
 
 
-async def delete_selected_product(shopping_list_id):
+async def delete_selected_product(shopping_list_id: int):
     async with async_session() as session:
         await session.execute(delete(Product).where(and_(Product.id_shoppinglist == shopping_list_id, Product.selected_for_delete == True)))
         await session.commit()
@@ -127,18 +127,22 @@ async def connect_shopping_list(tg_id, shopping_list_id: int):
             await session.commit()
 
 
-async def delete_shopping_list(shopping_list_id):
+async def delete_shopping_list(shopping_list_id: int, tg_id: int):
     async with async_session() as session:
-        await session.execute(delete(UserShoppingList).where(UserShoppingList.id_shopping_list == shopping_list_id))
+        user_id = await session.scalar(select(User.id).where(User.tg_id == tg_id))
+        await session.execute(delete(UserShoppingList).where(and_(
+            UserShoppingList.id_shopping_list == shopping_list_id,
+            UserShoppingList.id_user == user_id
+        )))
         await session.commit()
 
 
-async def get_product_title_by_id(product_id):
+async def get_product_title_by_id(product_id: int):
     async with async_session() as session:
         return (await session.scalar(select(Product).where(Product.id == product_id))).title
 
 
-async def set_new_product_title(product_id, title):
+async def set_new_product_title(product_id: int, title: str):
     async with async_session() as session:
         await session.execute(update(Product).where(Product.id == product_id).values(title=title))
         await session.commit()

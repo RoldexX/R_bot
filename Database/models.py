@@ -6,7 +6,14 @@ from Config_data.config import Config, load_config
 
 config: Config = load_config()
 
-engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3')
+# engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3')
+engine = create_async_engine(url='postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}'.format(
+    user=config.db.user,
+    password=config.db.password,
+    host=config.db.host,
+    port=config.db.port,
+    database=config.db.database,
+))
 
 async_session = async_sessionmaker(engine)
 

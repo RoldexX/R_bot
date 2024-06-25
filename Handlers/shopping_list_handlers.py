@@ -74,9 +74,9 @@ async def add_items_to_shopping_list(message: Message, state: FSMContext):
     """ Добавление позиций в список покупок """
     if message.text == MENU_BUTTONS_NEW_LIST['get_list']:
         shopping_list_id = (await state.get_data())['shopping_list_id']
-        products = await get_shopping_list_items_with_check(shopping_list_id)
+        products = await get_shopping_list_items_with_check(int(shopping_list_id))
         last_button = {'delet_massage': '❌ закрыть'}
-        await message.answer(await get_shopping_list_title(shopping_list_id),
+        await message.answer(await get_shopping_list_title(int(shopping_list_id)),
                              reply_markup=create_inline_keyboard(1, last_button,
                                                                  **products))
 
@@ -85,7 +85,7 @@ async def add_items_to_shopping_list(message: Message, state: FSMContext):
             shopping_list_id = (await state.get_data())['shopping_list_id']
             items = message.text.split('\n')
             for item in items:
-                await add_product(shopping_list_id, item)
+                await add_product(int(shopping_list_id), item)
         else:
             await message.answer('Названия продуктов принимаются только текстом!')
     else:
@@ -97,9 +97,9 @@ async def add_items_to_shopping_list(message: Message, state: FSMContext):
 async def edit_check_product(callback: CallbackQuery):
     """ Изменение состояния продукта """
     product_id = callback.data.split('_')[-1]
-    shopping_list_id = await get_shopping_list_ig_by_product_id(product_id)
-    await edit_product_check(product_id)
-    products = await get_shopping_list_items_with_check(shopping_list_id)
+    shopping_list_id = await get_shopping_list_ig_by_product_id(int(product_id))
+    await edit_product_check(int(product_id))
+    products = await get_shopping_list_items_with_check(int(shopping_list_id))
     await callback.answer('отмечен')
     last_button = {'delet_massage': '❌ закрыть'}
     await callback.message.edit_reply_markup(reply_markup=create_inline_keyboard(1,
@@ -113,7 +113,7 @@ async def shopping_list_callback(callback: CallbackQuery, state: FSMContext):
     shopping_list_id = callback.data.split('_')[-1]
     await callback.answer(callback.data)
     last_button = {'delet_massage': '❌ закрыть'}
-    await callback.message.edit_text(await get_shopping_list_title(shopping_list_id),
+    await callback.message.edit_text(await get_shopping_list_title(int(shopping_list_id)),
                                      reply_markup=create_inline_keyboard_shopping_list_settings(
                                          2,
                                          shopping_list_id,
@@ -125,9 +125,9 @@ async def shopping_list_callback(callback: CallbackQuery, state: FSMContext):
 async def get_view_shopping_list(callback: CallbackQuery):
     """ Вывод продуктов текущего спика покупок """
     shopping_list_id = callback.data.split('_')[-1]
-    products = await get_shopping_list_items_with_check(shopping_list_id)
+    products = await get_shopping_list_items_with_check(int(shopping_list_id))
     last_button = {f'shopping_list_{shopping_list_id}': '⬅️ назад'}
-    await callback.message.edit_text(await get_shopping_list_title(shopping_list_id),
+    await callback.message.edit_text(await get_shopping_list_title(int(shopping_list_id)),
                                      reply_markup=create_inline_keyboard(1, last_button, **products))
 
 
@@ -138,7 +138,7 @@ async def add_items_to_shopping_list(callback: CallbackQuery, state: FSMContext)
     await state.update_data(shopping_list_id=shopping_list_id)
     await state.set_state(ShoppingList.items)
     await callback.message.delete()
-    await callback.message.answer(f'Дополняем список {await get_shopping_list_title(shopping_list_id)}\n'
+    await callback.message.answer(f'Дополняем список {await get_shopping_list_title(int(shopping_list_id))}\n'
                                   f'Теперь вводите названия продуктов по одному, '
                                   f'либо отделяя их переносом на новую строку',
                                   reply_markup=create_reply_keyboard(width=2,
@@ -167,7 +167,7 @@ async def get_shared_shopping_list(message: Message):
         shopping_list_id = int(message.text.split(' ')[-1])
         await connect_shopping_list(message.from_user.id, shopping_list_id)
 
-        shopping_list_name = await get_shopping_list_title(shopping_list_id)
+        shopping_list_name = await get_shopping_list_title(int(shopping_list_id))
         await message.answer(f'Вам подлючён список\n{shopping_list_name}')
 
 
@@ -176,7 +176,7 @@ async def delete_shopping_list_by_id(callback: CallbackQuery):
     """ Запрос подтверждения открепления списка у текущего пользователя """
     shopping_list_id = callback.data.split('_')[-1]
     await callback.answer('Подтвердите удаление')
-    shopping_list_name = await get_shopping_list_title(shopping_list_id)
+    shopping_list_name = await get_shopping_list_title(int(shopping_list_id))
     last_buttons = {
         f'confirmed_delete_{shopping_list_id}': '✅ Подтвердить удаление',
         f'shopping_list_{shopping_list_id}': '⬅️ назад'
@@ -188,8 +188,10 @@ async def delete_shopping_list_by_id(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('confirmed_delete_'))
 async def delete_shopping_list_by_id(callback: CallbackQuery):
     """ Открепление текущего списка покупок от текущего пользователя """
-    shopping_list_id = callback.data.split('_')[-1]
-    await delete_shopping_list(shopping_list_id)
+    shopping_list_id = int(callback.data.split('_')[-1])
+    user_tg_id = int(callback.from_user.id)
+    print(user_tg_id)
+    await delete_shopping_list(shopping_list_id, user_tg_id)
     await callback.answer('Список удалён')
     await callback.message.delete()
 
@@ -206,7 +208,7 @@ async def get_keyboard_edit_shopping_list_items(callback: CallbackQuery):
     """ Вывод клавиатуры для выбора вида редактирования списка """
     shopping_list_id = callback.data.split('_')[-1]
     last_button = {f'shopping_list_{shopping_list_id}': '⬅️ назад'}
-    shopping_list_name = await get_shopping_list_title(shopping_list_id)
+    shopping_list_name = await get_shopping_list_title(int(shopping_list_id))
     await callback.answer('Выбор вида изменения позиций спика')
     await callback.message.edit_text(f'Как вы хотите изменить список\n{shopping_list_name}',
                                      reply_markup=create_inline_keyboard_shopping_list_settings(
@@ -220,7 +222,7 @@ async def get_keyboard_edit_shopping_list_items(callback: CallbackQuery):
 async def select_shopping_list_items_for_edit(callback: CallbackQuery):
     """ Вывод всех продуктов списка для выбора редактируемого """
     shopping_list_id = callback.data.split('_')[-1]
-    products_for_edit = await get_shopping_list_items(shopping_list_id, 'edit_')
+    products_for_edit = await get_shopping_list_items(int(shopping_list_id), 'edit_')
     last_button = {f'edit_items_{shopping_list_id}': '⬅️ назад'}
     await callback.answer('Выбор продукта')
     await callback.message.edit_text('Выберите продукт, наименование которого хотите изменить',
@@ -231,7 +233,7 @@ async def select_shopping_list_items_for_edit(callback: CallbackQuery):
 async def edit_shopping_list_item(callback: CallbackQuery, state: FSMContext):
     """ Переход к состоянию ожидания нового названия продукта """
     product_id = callback.data.split('_')[-1]
-    product_title = await get_product_title_by_id(product_id)
+    product_title = await get_product_title_by_id(int(product_id))
     await state.update_data(edit_product_id=product_id)
     await state.set_state(ShoppingList.edit_item)
     await callback.answer(f'Редактируем продукт {product_title}')
@@ -244,9 +246,9 @@ async def get_new_product_title(message: Message, state: FSMContext):
     """ Получение нового названия и обновление названия текущего продукта """
     product_id = (await state.get_data())['edit_product_id']
     product_title_new = message.text
-    await set_new_product_title(product_id, product_title_new)
+    await set_new_product_title(int(product_id), product_title_new)
     await state.clear()
-    shopping_list_id = await get_shopping_list_ig_by_product_id(product_id)
+    shopping_list_id = await get_shopping_list_ig_by_product_id(int(product_id))
     last_buttons = {
         f'rename_items_{shopping_list_id}': 'Продолжить редактировать продукты',
         f'shopping_list_{shopping_list_id}': 'Вернуться к настройкам списка',
@@ -260,7 +262,7 @@ async def get_new_product_title(message: Message, state: FSMContext):
 async def get_shopping_list_items_for_delete(callback: CallbackQuery):
     """ Вывод всех продуктов списка для выбора удаляемых позоций """
     shopping_list_id = callback.data.split('_')[-1]
-    products_for_delete = await get_shopping_list_items(shopping_list_id, 'select_item_for_del_')
+    products_for_delete = await get_shopping_list_items(int(shopping_list_id), 'select_item_for_del_')
     await callback.answer('Выберите продукты которые необходимо удалить')
     last_button = {f'edit_items_{shopping_list_id}': '⬅️ назад'}
     await callback.message.edit_text('Выберите продукты которые необходимо удалить',
@@ -271,9 +273,9 @@ async def get_shopping_list_items_for_delete(callback: CallbackQuery):
 async def select_shopping_list_items_for_delete(callback: CallbackQuery):
     """ Вывод продуктов выбранных к удалению до тех под пока удаление не будет подтверждено  """
     selected_product_id = callback.data.split('_')[-1]
-    shopping_list_id = await get_shopping_list_ig_by_product_id(selected_product_id)
-    await edit_product_delete_status(selected_product_id)
-    products_for_delete = await get_shopping_list_items_with_delete_state(shopping_list_id)
+    shopping_list_id = await get_shopping_list_ig_by_product_id(int(selected_product_id))
+    await edit_product_delete_status(int(selected_product_id))
+    products_for_delete = await get_shopping_list_items_with_delete_state(int(shopping_list_id))
     await callback.answer(callback.data)
     last_button = {f'confirmed_select_items_{shopping_list_id}': '✅ подтвердить удаление'}
     await callback.message.edit_reply_markup(reply_markup=create_inline_keyboard(1,
@@ -286,7 +288,7 @@ async def confirmed_selected_shopping_list_items_for_delete(callback: CallbackQu
     """ Удаление отмеченных элементов """
     shopping_list_id = callback.data.split('_')[-1]
     await callback.answer('Удаляем выбранные элементы')
-    await delete_selected_product(shopping_list_id)
+    await delete_selected_product(int(shopping_list_id))
     last_buttons = {
         f'del_items_{shopping_list_id}': 'Удалить ещё что-нибудь',
         f'shopping_list_{shopping_list_id}': 'Вернуться к настройкам списка',
