@@ -10,12 +10,15 @@ from Database.requests import (get_shopping_lists,
                                get_shopping_list_title,
                                get_shopping_list_items,
                                get_shopping_list_items_with_check,
+                               get_shopping_list_items_with_delete_state,
                                get_shopping_list_ig_by_product_id,
                                edit_product_check,
+                               edit_product_delete_status,
                                delete_shopping_list,
                                connect_shopping_list,
                                get_product_title_by_id,
-                               set_new_product_title)
+                               set_new_product_title,
+                               delete_selected_product)
 from Keyboards.keyboards import (create_inline_keyboard,
                                  create_reply_keyboard,
                                  create_inline_keyboard_shopping_list_settings)
@@ -175,7 +178,7 @@ async def delete_shopping_list_by_id(callback: CallbackQuery):
     await callback.answer('Подтвердите удаление')
     shopping_list_name = await get_shopping_list_title(shopping_list_id)
     last_buttons = {
-        f'confirmed_delete_{shopping_list_id}': '❌ Подтвердить удаление',
+        f'confirmed_delete_{shopping_list_id}': '✅ Подтвердить удаление',
         f'shopping_list_{shopping_list_id}': '⬅️ назад'
     }
     await callback.message.edit_text(f'Вы дейсвительно хотите удалить список\n{shopping_list_name}',
@@ -226,6 +229,7 @@ async def select_shopping_list_items_for_edit(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith('edit_product_'))
 async def edit_shopping_list_item(callback: CallbackQuery, state: FSMContext):
+    """ Переход к состоянию ожидания нового названия продукта """
     product_id = callback.data.split('_')[-1]
     product_title = await get_product_title_by_id(product_id)
     await state.update_data(edit_product_id=product_id)
@@ -237,6 +241,7 @@ async def edit_shopping_list_item(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(ShoppingList.edit_item))
 async def get_new_product_title(message: Message, state: FSMContext):
+    """ Получение нового названия и обновление названия текущего продукта """
     product_id = (await state.get_data())['edit_product_id']
     product_title_new = message.text
     await set_new_product_title(product_id, product_title_new)
@@ -249,3 +254,43 @@ async def get_new_product_title(message: Message, state: FSMContext):
     }
     await message.answer(f'Название продукта изменено на: {product_title_new}',
                          reply_markup=create_inline_keyboard(1, last_buttons))
+
+
+@router.callback_query(F.data.startswith('del_items_'))
+async def get_shopping_list_items_for_delete(callback: CallbackQuery):
+    """ Вывод всех продуктов списка для выбора удаляемых позоций """
+    shopping_list_id = callback.data.split('_')[-1]
+    products_for_delete = await get_shopping_list_items(shopping_list_id, 'select_item_for_del_')
+    await callback.answer('Выберите продукты которые необходимо удалить')
+    last_button = {f'edit_items_{shopping_list_id}': '⬅️ назад'}
+    await callback.message.edit_text('Выберите продукты которые необходимо удалить',
+                                     reply_markup=create_inline_keyboard(1, last_button, **products_for_delete))
+
+
+@router.callback_query(F.data.startswith('select_item_for_del_product_'))
+async def select_shopping_list_items_for_delete(callback: CallbackQuery):
+    """ Вывод продуктов выбранных к удалению до тех под пока удаление не будет подтверждено  """
+    selected_product_id = callback.data.split('_')[-1]
+    shopping_list_id = await get_shopping_list_ig_by_product_id(selected_product_id)
+    await edit_product_delete_status(selected_product_id)
+    products_for_delete = await get_shopping_list_items_with_delete_state(shopping_list_id)
+    await callback.answer(callback.data)
+    last_button = {f'confirmed_select_items_{shopping_list_id}': '✅ подтвердить удаление'}
+    await callback.message.edit_reply_markup(reply_markup=create_inline_keyboard(1,
+                                                                                 last_button,
+                                                                                 **products_for_delete))
+
+
+@router.callback_query(F.data.startswith('confirmed_select_items_'))
+async def confirmed_selected_shopping_list_items_for_delete(callback: CallbackQuery):
+    """ Удаление отмеченных элементов """
+    shopping_list_id = callback.data.split('_')[-1]
+    await callback.answer('Удаляем выбранные элементы')
+    await delete_selected_product(shopping_list_id)
+    last_buttons = {
+        f'del_items_{shopping_list_id}': 'Удалить ещё что-нибудь',
+        f'shopping_list_{shopping_list_id}': 'Вернуться к настройкам списка',
+        'delet_massage': '❌ закрыть'
+    }
+    await callback.message.edit_text('Выбранные элементы удалены',
+                                     reply_markup=create_inline_keyboard(1, last_buttons))
