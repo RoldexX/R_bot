@@ -25,7 +25,7 @@ async def get_shopping_list_title(id_shopping_list: int):
 async def get_shopping_list_items(id_shopping_list: int, key_product_start_with: str = ''):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
-            select(Product).where(Product.id_shoppinglist == id_shopping_list)
+            select(Product).where(Product.id_shoppinglist == id_shopping_list).order_by(Product.id.asc())
         )
         shopping_list_items: dict[str, str] = dict()
         for item in shopping_list_items_obj:
@@ -36,7 +36,7 @@ async def get_shopping_list_items(id_shopping_list: int, key_product_start_with:
 async def get_shopping_list_items_with_check(id_shopping_list: int):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
-            select(Product).where(Product.id_shoppinglist == id_shopping_list)
+            select(Product).where(Product.id_shoppinglist == id_shopping_list).order_by(Product.id.asc())
         )
         shopping_list_items: dict[str, str] = dict()
         for item in shopping_list_items_obj:
@@ -50,7 +50,7 @@ async def get_shopping_list_items_with_check(id_shopping_list: int):
 async def get_shopping_list_items_with_delete_state(id_shopping_list: int):
     async with async_session() as session:
         shopping_list_items_obj = await session.scalars(
-            select(Product).where(Product.id_shoppinglist == id_shopping_list)
+            select(Product).where(Product.id_shoppinglist == id_shopping_list).order_by(Product.id.asc())
         )
         shopping_list_items: dict[str, str] = dict()
         for item in shopping_list_items_obj:
