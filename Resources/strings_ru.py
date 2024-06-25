@@ -16,6 +16,12 @@ VIEW_SHOPPING_LIST_BUTTONS: dict[str, str] = {
 SHOPPING_LIST_BUTTONS: dict[str, str] = {
     'get_view': 'Вывести список',
     'add_items': 'Дополнить',
+    'edit_items': 'Изменить',
     'share_shopping_list': 'Поделиться',
     'delete': 'Удалить'
+}
+
+SHOPPING_LIST_EDIT_BUTTONS: dict[str, str] = {
+    'rename_items': 'Изменить название продукта',
+    'del_items': 'Удалить некоторые продукты'
 }
