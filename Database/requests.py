@@ -22,11 +22,22 @@ async def get_shopping_list_title(id_shopping_list):
         return await session.scalar(select(ShoppingList.title).where(ShoppingList.id == id_shopping_list))
 
 
-async def get_shopping_list_items(id_shopping_list):
+async def get_shopping_list_items(id_shopping_list, key_product_start_with: str = ''):
     async with async_session() as session:
-        shopping_list_items_obj = (await session.scalars(
+        shopping_list_items_obj = await session.scalars(
             select(Product).where(Product.id_shoppinglist == id_shopping_list)
-        ))
+        )
+        shopping_list_items: dict[str, str] = dict()
+        for item in shopping_list_items_obj:
+            shopping_list_items[f'{key_product_start_with}product_{item.id}'] = item.title
+        return shopping_list_items
+
+
+async def get_shopping_list_items_with_check(id_shopping_list):
+    async with async_session() as session:
+        shopping_list_items_obj = await session.scalars(
+            select(Product).where(Product.id_shoppinglist == id_shopping_list)
+        )
         shopping_list_items: dict[str, str] = dict()
         for item in shopping_list_items_obj:
             if item.check:
@@ -88,4 +99,15 @@ async def connect_shopping_list(tg_id, shopping_list_id: int):
 async def delete_shopping_list(shopping_list_id):
     async with async_session() as session:
         await session.execute(delete(UserShoppingList).where(UserShoppingList.id_shopping_list == shopping_list_id))
+        await session.commit()
+
+
+async def get_product_title_by_id(product_id):
+    async with async_session() as session:
+        return (await session.scalar(select(Product).where(Product.id == product_id))).title
+
+
+async def set_new_product_title(product_id, title):
+    async with async_session() as session:
+        await session.execute(update(Product).where(Product.id == product_id).values(title=title))
         await session.commit()

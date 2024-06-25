@@ -23,6 +23,7 @@ class FSMFillDice(StatesGroup):
 
 @router.message(CommandStart())
 async def start(message: Message):
+    """ Обработка команды /start """
     await requests.set_user(message.from_user.id)
     await message.delete()
     await message.answer(f'Привет {message.from_user.full_name}!', reply_markup=keyboard)
@@ -30,11 +31,13 @@ async def start(message: Message):
 
 @router.message(F.text == MENU_BUTTONS['say_hi'])
 async def keyboard_say_hi(message: Message):
+    """ Joke """
     await message.answer(f'{message.from_user.full_name} да уже здоровались)')
 
 
 @router.message(F.text == MENU_BUTTONS['take_cube'])
 async def keyboard_take_cube(message: Message, bot: Bot, state: FSMContext):
+    """ Бот бросает кубик, сохраняет значение и ожидает броска пользователя """
     bot_dice = (await bot.send_dice(chat_id=message.from_user.id)).dice
     print(bot_dice)
     await state.update_data(bot_dice_value=bot_dice.value)
@@ -43,6 +46,7 @@ async def keyboard_take_cube(message: Message, bot: Bot, state: FSMContext):
 
 @router.message(StateFilter(FSMFillDice.bot_threw_dice))
 async def user_dice(message: Message, state: FSMContext):
+    """ Получаем значение кубика пользователя и выводим результат """
     user_dice_value = message.dice.value
     print(user_dice_value)
     bot_dice_value = (await state.get_data())["bot_dice_value"]
@@ -59,5 +63,6 @@ async def user_dice(message: Message, state: FSMContext):
 
 @router.message()
 async def user_dice(message: Message):
+    """ Обрабатываем отсутствующие комманды """
     await message.answer('У меня нет таких комманд\nМожет список покупок?')
     print(message)
