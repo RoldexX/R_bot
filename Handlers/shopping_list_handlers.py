@@ -137,6 +137,7 @@ async def add_items_to_shopping_list(callback: CallbackQuery, state: FSMContext)
     shopping_list_id = callback.data.split('_')[-1]
     await state.update_data(shopping_list_id=shopping_list_id)
     await state.set_state(ShoppingList.items)
+    await callback.answer('Дополняем список')
     await callback.message.delete()
     await callback.message.answer(f'Дополняем список {await get_shopping_list_title(int(shopping_list_id))}\n'
                                   f'Теперь вводите названия продуктов по одному, '
